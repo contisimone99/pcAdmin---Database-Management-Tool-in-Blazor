@@ -1,0 +1,25 @@
+﻿@page "/superhero/{id:int}"
+@using pcAdmin.Client.Services
+@inject ISuperHeroService SuperHeroService
+
+@if (hero == null)
+{
+    <span>Hero is loading...</span>
+}
+else
+{
+    <h3>Lui è @hero.HeroName, per gli amici @hero.FirstName @hero.LastName.</h3>
+    <span>Viene da @hero.Comic.Name.</span>
+}
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    pcAdmin.Shared.SuperHero hero = null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        hero = await SuperHeroService.GetSuperHero(Id);
+    }
+}

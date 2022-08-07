@@ -1,0 +1,40 @@
+﻿@page "/dbms"
+@using pcAdmin.Client.Services
+@using pcAdmin.Shared
+@inject IJSRuntime JSRuntime
+
+<h3>Inserisci DBMS</h3>
+
+
+<EditForm Model="sqlServer" OnSubmit="HandleSubmit">
+    <div class="form-group">
+        <label>Server</label>
+        <InputText @bind-Value="sqlServer.Server" class="form-control"></InputText>
+    </div>
+    <div class="form-group">
+        <label>Database</label>
+        <InputText @bind-Value="sqlServer.Database" class="form-control"></InputText>
+    </div>
+    <div class="form-group">
+        <label>Username</label>
+        <InputText @bind-Value="sqlServer.Username" class="form-control"></InputText>
+    </div>
+    <div class="form-group">
+        <label>Password</label><br />
+        <InputText @bind-Value="sqlServer.Password" class="form-control"></InputText>
+    </div>
+    <button type="submit" class="btn btn-primary">Submit</button>
+</EditForm>
+
+@code {
+    [Parameter]
+    public pcAdmin.Shared.SqlServer sqlServer { get; set; } = new pcAdmin.Shared.SqlServer();
+    
+
+
+    async void HandleSubmit()
+    {
+        
+
+    }
+}
