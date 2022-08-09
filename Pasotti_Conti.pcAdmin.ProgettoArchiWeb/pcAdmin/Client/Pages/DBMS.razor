@@ -1,6 +1,7 @@
 ﻿@page "/dbms"
 @using pcAdmin.Client.Services
 @using pcAdmin.Shared
+@inject IDBService DBService
 @inject IJSRuntime JSRuntime
 
 <h3>Inserisci DBMS</h3>
@@ -29,12 +30,11 @@
 @code {
     [Parameter]
     public pcAdmin.Shared.SqlServer sqlServer { get; set; } = new pcAdmin.Shared.SqlServer();
-    
+
 
 
     async void HandleSubmit()
     {
-        
-
+        await DBService.ConnectionStringSqlServer(sqlServer);
     }
 }

@@ -1,24 +1,30 @@
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.EntityFrameworkCore;
+using pcAdmin.Server.Controllers;
 using pcAdmin.Server.Data;
 
 var builder = WebApplication.CreateBuilder(args);
-string connString = builder.Configuration.GetConnectionString("SqlServer");
 
 // Add services to the container.
-
+builder.Services.AddSwaggerGen();
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
 
+var provider = DbProvider.SQLServer;
+var connectionString = ConnectionStrings.Get(provider);
+
+/* var options = new DbContextOptionsBuilder<DataContext>()
+    .Use(provider, connectionString)
+    .Options;
+*/
+
 builder.Services.AddDbContext<DataContext>(options =>
 {
-    options.UseSqlServer(connString);
+    options.UseSqlServer(connectionString);
 
 });
 
 var app = builder.Build();
-
-
 
 
 // Configure the HTTP request pipeline.
@@ -32,6 +38,13 @@ else
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
+
+app.UseSwagger();
+app.UseSwaggerUI(c =>
+{
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Blazor API V1");
+});
+
 
 app.UseHttpsRedirection();
 
