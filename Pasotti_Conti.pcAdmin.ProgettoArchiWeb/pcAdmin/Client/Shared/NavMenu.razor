@@ -1,4 +1,6 @@
-﻿<div class="top-row pl-4 navbar navbar-dark">
+﻿@inject IJSRuntime jsRuntime
+
+<div class="top-row pl-4 navbar navbar-dark">
     <a class="navbar-brand" href="">pcADMIN</a>
     <button class="navbar-toggler" @onclick="ToggleNavMenu">
         <span class="navbar-toggler-icon"></span>
@@ -12,18 +14,9 @@
                 <span class="oi oi-home" aria-hidden="true"></span> Home
             </NavLink>
         </li>
+
         <li class="nav-item px-3">
-            <NavLink class="nav-link" href="counter">
-                <span class="oi oi-plus" aria-hidden="true"></span> Counter
-            </NavLink>
-        </li>
-        <li class="nav-item px-3">
-            <NavLink class="nav-link" href="superheroes">
-                <span class="oi oi-people" aria-hidden="true"></span> Super Heroes
-            </NavLink>
-        </li>
-        <li class="nav-item px-3">
-            <NavLink class="nav-link" href="dbms">
+            <NavLink @onclick="NavigateToNewTab" class="nav-link" href="/">
                 <span class="oi oi-list-rich" aria-hidden="true"></span> DBMS
             </NavLink>
         </li>
@@ -38,5 +31,11 @@
     private void ToggleNavMenu()
     {
         collapseNavMenu = !collapseNavMenu;
+    }
+    
+    public async Task NavigateToNewTab()
+    {
+        string url = "/dbms";
+        await jsRuntime.InvokeAsync<object>("open", url, "_blank");
     }
 }

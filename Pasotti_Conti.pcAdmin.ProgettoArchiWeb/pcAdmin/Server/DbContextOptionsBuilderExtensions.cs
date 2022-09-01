@@ -2,7 +2,7 @@
 
 static class DbContextOptionsBuilderExtensions
 {
-    public static DbContextOptionsBuilder<T> Use<T>(this DbContextOptionsBuilder<T> builder, DbProvider provider, string connectionString)
+    public static DbContextOptionsBuilder<T> Use<T>(this DbContextOptionsBuilder<T> builder, string provider, string connectionString)
         where T : DbContext
     {
         ArgumentNullException.ThrowIfNull(builder);
@@ -10,15 +10,12 @@ static class DbContextOptionsBuilderExtensions
 
         return provider switch
         {
-            DbProvider.SQLServer => builder.UseSqlServer(connectionString),
+           "SQLITE"     => builder.UseSqlite(@connectionString),
+           "SQLSERVER"  => builder.UseSqlServer(connectionString),
+           "POSTGRESQL" => builder.UseNpgsql(connectionString),
+
             _ => throw new NotSupportedException(),
         };
     }
 }
 
-enum DbProvider
-{
-    SQLite,
-    SQLServer,
-    PostgreSQL,
-}

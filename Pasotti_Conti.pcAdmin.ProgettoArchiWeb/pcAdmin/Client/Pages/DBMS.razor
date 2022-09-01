@@ -1,40 +1,235 @@
 ﻿@page "/dbms"
+@using Blazored.SessionStorage
 @using pcAdmin.Client.Services
 @using pcAdmin.Shared
-@inject IDBService DBService
 @inject IJSRuntime JSRuntime
+@inject NavigationManager NavigationManager
 
-<h3>Inserisci DBMS</h3>
+@inject ISessionStorageService sessionStorage
 
 
-<EditForm Model="sqlServer" OnSubmit="HandleSubmit">
-    <div class="form-group">
-        <label>Server</label>
-        <InputText @bind-Value="sqlServer.Server" class="form-control"></InputText>
+
+
+<div class="tab">
+    <button @onclick="(x=>DisplayTab(1))">SQLSERVER</button>
+    <button @onclick="(x=>DisplayTab(2))">SQLITE</button>
+    <button @onclick="(x=>DisplayTab(3))">POSTGRESQL</button>
+</div>
+@if(tab1){
+<div class="tabcontent">
+        <h1>Inserisci Dati Database SQLSERVER</h1>
+        <hr class="mb-5" />
+        <div class="row mb-5">
+
+            <div class="col-md-2">
+                <h5>Server</h5>
+                <div class="input-group">
+                    <input id="Server" class="form-control" type="text" placeholder="Enter a value" @bind="SQLSERVER_Server" />
+                </div>
+            </div>
+
+            <div class="col-md-2">
+                <h5>Database</h5>
+                <div class="input-group">
+                    <input id="Database" class="form-control" type="text" placeholder="Enter a value" @bind="SQLSERVER_Database" />
+                </div>
+            </div>
+
+            <div class="col-md-2">
+                <h5>User ID</h5>
+                <div class="input-group">
+                    <input id="UserID" class="form-control" type="text" placeholder="Enter a value" @bind="SQLSERVER_UserID" />
+                </div>
+            </div>
+
+            <div class="col-md-2">
+                <h5>Password</h5>
+                <div class="input-group">
+                    <input id="Password" class="form-control" type="text" placeholder="Enter a value" @bind="SQLSERVER_Password" />
+                    <div class="input-group-append">
+                        <button id="NameButton" class="btn btn-primary" @onclick="(x=>Save(1))">Save</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+</div>
+}
+@if (tab2)
+{
+    <div class="tabcontent">
+        <h1>Inserisci Dati Database SQLITE</h1>
+        <hr class="mb-5" />
+        <div class="row mb-5">
+            <div class="col-md-2">
+                <h5>Data Source</h5>
+                <div class="input-group">
+                    <input id="DataSource" class="form-control" type="text" placeholder="Enter a value" @bind="SQLITE_DataSource" />
+                    <div class="input-group-append">
+                        <button id="NameButton" class="btn btn-primary" @onclick="(x=>Save(2))">Save</button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-    <div class="form-group">
-        <label>Database</label>
-        <InputText @bind-Value="sqlServer.Database" class="form-control"></InputText>
+}
+@if (tab3)
+{
+    <div class="tabcontent">
+        <h1>Inserisci Dati Database POSTGRESQL</h1>
+        <hr class="mb-5" />
+        <div class="row mb-5">
+
+            <div class="col-md-2">
+                <h5>Server</h5>
+                <div class="input-group">
+                    <input id="Host" class="form-control" type="text" placeholder="Enter a value" @bind="POSTGRESQL_Server" />
+                </div>
+            </div>
+
+            <div class="col-md-2">
+                <h5>Database</h5>
+                <div class="input-group">
+                    <input id="Database" class="form-control" type="text" placeholder="Enter a value" @bind="POSTGRESQL_Database" />
+                </div>
+            </div>
+
+            <div class="col-md-2">
+                <h5>Port</h5>
+                <div class="input-group">
+                    <input id="Port" class="form-control" type="text" placeholder="Enter a value" @bind="POSTGRESQL_Port" />
+                </div>
+            </div>
+
+            <div class="col-md-2">
+                <h5>User ID</h5>
+                <div class="input-group">
+                    <input id="UserID" class="form-control" type="text" placeholder="Enter a value" @bind="POSTGRESQL_UserID" />
+                </div>
+            </div>
+
+            <div class="col-md-2">
+                <h5>Password</h5>
+                <div class="input-group">
+                    <input id="Password" class="form-control" type="text" placeholder="Enter a value" @bind="POSTGRESQL_Password" />
+                    <div class="input-group-append">
+                        <button id="NameButton" class="btn btn-primary" @onclick="(x=>Save(3))">Save</button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-    <div class="form-group">
-        <label>Username</label>
-        <InputText @bind-Value="sqlServer.Username" class="form-control"></InputText>
-    </div>
-    <div class="form-group">
-        <label>Password</label><br />
-        <InputText @bind-Value="sqlServer.Password" class="form-control"></InputText>
-    </div>
-    <button type="submit" class="btn btn-primary">Submit</button>
-</EditForm>
+}
+
+
+    
 
 @code {
-    [Parameter]
-    public pcAdmin.Shared.SqlServer sqlServer { get; set; } = new pcAdmin.Shared.SqlServer();
+    private bool tab1 = true;
+    private bool tab2 = false;
+    private bool tab3 = false;
 
-
-
-    async void HandleSubmit()
+    public void DisplayTab(int TabNumber)
     {
-        await DBService.ConnectionStringSqlServer(sqlServer);
+        switch (TabNumber)
+        {
+            case 1:
+                this.tab1 = true;
+                this.tab2 = false;
+                this.tab3 = false;
+                break;
+            case 2:
+                this.tab1 = false;
+                this.tab2 = true;
+                this.tab3 = false;
+                break;
+            case 3:
+                this.tab1 = false;
+                this.tab2 = false;
+                this.tab3 = true;
+                break;
+
+        }
+    }
+
+    string SQLSERVER_Server { get; set; }
+    string SQLSERVER_Database { get; set; }
+    string SQLSERVER_UserID { get; set; }
+    string SQLSERVER_Password { get; set; }
+
+    string SQLITE_DataSource { get; set; }
+
+    string POSTGRESQL_Server { get; set; }
+    string POSTGRESQL_Database { get; set; }
+    string POSTGRESQL_Port { get; set; }
+    string POSTGRESQL_UserID { get; set; }
+    string POSTGRESQL_Password { get; set; }
+
+    async Task Save(int TabNumber)
+    {
+        switch (TabNumber)
+        {
+            case 1:
+                var SQLSERVER_ConnString = "Server=" + SQLSERVER_Server + "; Database=" + SQLSERVER_Database + "; User Id=" + SQLSERVER_UserID + "; Password=" + SQLSERVER_Password + ";";
+                await sessionStorage.SetItemAsync("ConnectionString", SQLSERVER_ConnString);
+                await sessionStorage.SetItemAsync("Provider", "SQLSERVER");
+                SQLSERVER_Server = "";
+                SQLSERVER_Database = "";
+                SQLSERVER_UserID = "";
+                SQLSERVER_Password = "";
+                NavigationManager.NavigateTo("pcadmin");
+                break;
+
+            case 2:
+                var SQLITE_ConnString = "Data Source=" + SQLITE_DataSource + ";";
+                await sessionStorage.SetItemAsync("ConnectionString", SQLITE_ConnString);
+                await sessionStorage.SetItemAsync("Provider", "SQLITE");
+                SQLITE_DataSource = "";
+                NavigationManager.NavigateTo("pcadmin");
+                break;
+
+            case 3:
+                var POSTGRESQL_ConnString = "Server=" + POSTGRESQL_Server + "; Database=" + POSTGRESQL_Database + "; Port=" + POSTGRESQL_Port + "; User ID=" + POSTGRESQL_UserID + "; Password=" + POSTGRESQL_Password + ";";
+                await sessionStorage.SetItemAsync("ConnectionString", POSTGRESQL_ConnString);
+                await sessionStorage.SetItemAsync("Provider", "POSTGRESQL");
+                POSTGRESQL_Server = "";
+                POSTGRESQL_Database = "";
+                POSTGRESQL_Port = "";
+                POSTGRESQL_UserID = "";
+                POSTGRESQL_Password = "";
+                NavigationManager.NavigateTo("pcadmin");
+                break;
+
+        }
+        
     }
 }
+
+<style>
+    .tab {
+        overflow: hidden;
+        border: 1px solid #ccc;
+        background-color: #f1f1f1;
+    }
+
+        .tab button {
+            background-color: inherit;
+            float: left;
+            border: none;
+            outline: none;
+            cursor: pointer;
+            padding: 14px 16px;
+            transition: 0.3s;
+            font-size: 17px;
+        }
+
+            .tab button:hover {
+                background-color: #ddd;
+            }
+
+    .tabcontent {
+        padding: 6px 12px;
+        border: 1px solid black;
+        border-top: none;
+    }
+
+</style>

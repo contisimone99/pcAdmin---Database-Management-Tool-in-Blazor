@@ -1,0 +1,277 @@
+﻿@page "/pcadmin"
+@using Blazored.SessionStorage
+@using pcAdmin.Client.Services
+@using pcAdmin.Shared
+@inject IPCAdminService PCAdminService
+@inject ISessionStorageService sessionStorage
+@inject NavigationManager NavigationManager
+
+
+<div class="tab">
+    <button @onclick="(x=>DisplayTab(1))">Lista Table e Struttura</button>
+    <button @onclick="(x=>DisplayTab(2))">SQL Query</button>
+</div>
+
+@if (tab1)
+{
+    <br>
+    <br>
+    <h3>Lista Tabelle all'interno del Database</h3>
+
+    <div class="tabcontent">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Nomi Tabelle</th>
+                    <th></th>
+                    <th></th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var hero in PCAdminService.TablesList)
+                {
+                    <tr>
+                        <td @onclick="()=> GetALLTableInfo(hero)">@hero.NomeTabella</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+        <br>
+        <br>
+        <br>
+
+
+
+        @if (PCAdminService.TableInfo.Count != 0)
+        {
+            <h3>Informazioni Table Selezionata</h3>
+
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Nomi Colonne</th>
+                        <th>Tipo Dato</th>
+                        <th>Is Nullable</th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var hero in PCAdminService.TableInfo)
+                    {
+                        <tr>
+                            <td>@hero.NomeColonna</td>
+                            <td>@hero.TipoDato</td>
+                            <td>@hero.IsNullable</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+
+
+        <br>
+        <br>
+
+
+        @if (PCAdminService.TablePrimaryKey.Count != 0)
+        {
+            <h3>Chiave Primaria Table Selezionata</h3>
+
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Nome Chiave Primaria</th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var hero in PCAdminService.TablePrimaryKey)
+                    {
+                        <tr>
+                            <td>@hero.ChiavePrimaria</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+
+
+        <br>
+        <br>
+
+
+        @if (PCAdminService.TableForeignKey.Count != 0)
+        {
+            <h3>Chiave Esterne nel Database</h3>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Nome Chiavi Esterne</th>
+                        <th>Tabella</th>
+                        <th>Colonna</th>
+                        <th>Tabella Referenziata</th>
+                        <th>Colonna Referenziata</th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var hero in PCAdminService.TableForeignKey)
+                    {
+                        <tr>
+                            <td>@hero.NomeForeignKey</td>
+                            <td>@hero.Tabella</td>
+                            <td>@hero.Colonna</td>
+                            <td>@hero.Tabella_Referenziata</td>
+                            <td>@hero.Colonna_Referenziata</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+
+        <br>
+        <br>
+
+        @if (PCAdminService.TableIndex.Count != 0)
+        {
+            <h3>Indici Tabella Selezionata</h3>
+
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Nome Index</th>
+                        <th>Index ID</th>
+                        <th>Unico</th>
+                        <th>Primary Key</th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var hero in PCAdminService.TableIndex)
+                    {
+                        <tr>
+                            <td>@hero.Nome</td>
+                            <td>@hero.Index_ID</td>
+                            <td>@hero.Unico</td>
+                            <td>@hero.PrimaryKey</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+}
+@if (tab2)
+{
+    <div class="tabcontent">
+        <br>
+        <br>
+        <h3>Inserisci una Query</h3>
+        <input @onkeyup="@SendQuery" @bind=Query />
+        @if (PCAdminService.SelectQuery.Count != 0)
+        {
+            <h3>Indici Tabella Selezionata</h3>
+
+            <table class="table">
+
+                <tbody>
+                    @foreach (var hero in PCAdminService.SelectQuery)
+                    {
+                        <tr>
+                        @foreach (var hero2 in hero)
+                        {
+                            
+                                <td>@hero2</td>
+                            
+                        }
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+
+
+    </div>
+}
+
+
+@code {
+
+    private bool tab1 = true;
+    private bool tab2 = false;
+
+    public void DisplayTab(int TabNumber)
+    {
+        switch (TabNumber)
+        {
+            case 1:
+                this.tab1 = true;
+                this.tab2 = false;
+                break;
+            case 2:
+                this.tab1 = false;
+                this.tab2 = true;
+                break;
+        }
+    }
+
+
+    pcAdmin.Shared.DatabaseConnection databaseConnection = new pcAdmin.Shared.DatabaseConnection();
+
+    public string Query { get; set; } = string.Empty;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        databaseConnection.Provider = await sessionStorage.GetItemAsync<string>("Provider");
+        databaseConnection.ConnectionString = await sessionStorage.GetItemAsync<string>("ConnectionString");
+        await PCAdminService.GetTablesList(databaseConnection);
+        await PCAdminService.GetTableForeignKey(databaseConnection);
+        PCAdminService.OnChange += StateHasChanged;
+    }
+
+    public async Task GetALLTableInfo(TablesList Table)
+    {
+        databaseConnection.Provider = await sessionStorage.GetItemAsync<string>("Provider");
+        databaseConnection.ConnectionString = await sessionStorage.GetItemAsync<string>("ConnectionString");
+        databaseConnection.TableData = Table.NomeTabella;
+        await PCAdminService.GetTableInfo(databaseConnection);
+        await PCAdminService.GetTablePrimaryKey(databaseConnection);
+        await PCAdminService.GetTableIndex(databaseConnection);
+        PCAdminService.OnChange += StateHasChanged;
+    }
+
+    public async Task SendQuery(KeyboardEventArgs e)
+    {
+        if (e.Code == "Enter" || e.Code == "NumpadEnter")
+        {
+            databaseConnection.Provider = await sessionStorage.GetItemAsync<string>("Provider");
+            databaseConnection.ConnectionString = await sessionStorage.GetItemAsync<string>("ConnectionString");
+            databaseConnection.Query = Query;
+            await PCAdminService.SendQuery(databaseConnection);
+            await PCAdminService.GetTablesList(databaseConnection);
+            await PCAdminService.GetTableForeignKey(databaseConnection);
+            await PCAdminService.GetTableInfo(databaseConnection);
+            await PCAdminService.GetTablePrimaryKey(databaseConnection);
+            await PCAdminService.GetTableIndex(databaseConnection);
+            PCAdminService.OnChange += StateHasChanged;
+        }
+    }
+
+
+    public void Dispose()
+    {
+        PCAdminService.OnChange -= StateHasChanged;
+    }
+
+}

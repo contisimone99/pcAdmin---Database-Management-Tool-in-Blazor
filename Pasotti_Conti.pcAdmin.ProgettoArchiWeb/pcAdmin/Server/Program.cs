@@ -2,27 +2,28 @@ using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.EntityFrameworkCore;
 using pcAdmin.Server.Controllers;
 using pcAdmin.Server.Data;
+using System.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
+
+
 
 // Add services to the container.
 builder.Services.AddSwaggerGen();
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
 
-var provider = DbProvider.SQLServer;
-var connectionString = ConnectionStrings.Get(provider);
-
-/* var options = new DbContextOptionsBuilder<DataContext>()
-    .Use(provider, connectionString)
-    .Options;
+/*
+var configuration = new ConfigurationBuilder()
+             .SetBasePath(Directory.GetCurrentDirectory())
+              .AddJsonFile("appsettings.json")
+              .Build();
+builder.Services.AddDbContext<DataContext>(
+ // options => options.UseNpgsql(configuration.GetConnectionString("PostgresSQL")
+ // options => options.UseSqlite(configuration.GetConnectionString("Sqlite")
+ // options => options.UseSqlServer(configuration.GetConnectionString("SqlServer")
+   ));
 */
-
-builder.Services.AddDbContext<DataContext>(options =>
-{
-    options.UseSqlServer(connectionString);
-
-});
 
 var app = builder.Build();
 
