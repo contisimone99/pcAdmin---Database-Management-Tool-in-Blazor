@@ -13,6 +13,7 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
 
+//Necessario per le Migrations
 /*
 var configuration = new ConfigurationBuilder()
              .SetBasePath(Directory.GetCurrentDirectory())
@@ -45,6 +46,7 @@ app.UseSwaggerUI(c =>
 {
     c.SwaggerEndpoint("/swagger/v1/swagger.json", "Blazor API V1");
 });
+
 
 
 app.UseHttpsRedirection();

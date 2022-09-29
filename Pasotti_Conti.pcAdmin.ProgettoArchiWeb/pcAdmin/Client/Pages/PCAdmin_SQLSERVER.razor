@@ -1,0 +1,477 @@
+﻿@page "/pcadminsqlserver"
+@using Blazored.SessionStorage
+@using System.Text.RegularExpressions
+@using pcAdmin.Client.Services
+@using pcAdmin.Shared
+@inject IPCAdminService PCAdminService
+@inject ISessionStorageService sessionStorage
+@inject NavigationManager NavigationManager
+@inject HttpClient _httpClient
+
+<!--Controllo Tab-->
+<div class="tab">
+    <button @onclick="(x=>DisplayTab(1))">Lista Table e Struttura</button>
+    <button @onclick="(x=>DisplayTab(2))">SQL Query</button>
+</div>
+
+<!--Tab 1-->
+@if (tab1)
+{
+    <br>
+    <br>
+
+    <!--Dati non corretti o nessuna table presente.-->
+    @if (PCAdminService.TablesList.NomeTabella_SQLSERVER == null)
+    {
+        <h3>Caricamento in corso...</h3>
+        <br />
+        <h4>Se questa schermata rimane:</h4>
+        <br />
+        <h4>Dati non corretti o nessuna table presente</h4>
+    }
+
+
+    <!--Lista Tabelle all'interno del DB-->
+    <div class="tabcontent">
+        @if (PCAdminService.TablesList.NomeTabella_SQLSERVER != null)
+        {
+            <h3>Lista Tabelle all'interno del Database</h3>
+
+            <table class="table">
+                <tbody>
+
+                    @foreach (var hero in PCAdminService.TablesList.NomeTabella_SQLSERVER)
+                    {
+                        <tr>
+                            <td @onclick="()=> GetALLTableInfo(hero)">@hero.NomeTabella</td>
+                        </tr>
+                    }
+
+                </tbody>
+            </table>
+        }
+
+        <br>
+        <br>
+        <br>
+
+
+        <!--Informazioni Tabella Selezionata-->
+        @if (PCAdminService.TableInfo.Count != 0)
+        {
+            <h3>Informazioni Tabella Selezionata</h3>
+
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Nome Colonna</th>
+                        <th>Order</th>
+                        <th>TipoDato</th>
+                        <th>IsNullable</th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (var count = 0; count < PCAdminService.TableInfo[0].Count(); count++)
+                    {
+                        <tr>
+                            @foreach (var hero in PCAdminService.TableInfo)
+                            {
+
+                                <td>@hero[count].</td>
+
+                            }
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+
+        <br>
+        <br>
+
+        <!--Chiave Primaria Tabella Selezionata-->
+        @if (PCAdminService.TablePrimaryKey.ChiavePrimaria_SQLSERVER != null)
+        {
+            <h3>Chiave Primaria Table Selezionata</h3>
+
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Nome Chiave Primaria</th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        @foreach (var hero in PCAdminService.TablePrimaryKey.ChiavePrimaria_SQLSERVER)
+                        {
+                            <td>@hero.ChiavePrimaria</td>
+                        }
+                    </tr>
+                </tbody>
+            </table>
+        }
+
+        <br>
+        <br>
+
+        <!--Chiave Esterna Tabella Selezionata-->
+        @if (PCAdminService.TableForeignKey.tableForeignKey_SQLSERVER != null)
+        {
+            <h3>Chiave Esterne nel Database</h3>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Nome Colonna</th>
+                        <th>Nome Tabella Esterna</th>
+                        <th>Nome Colonna Esterna</th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var hero in PCAdminService.TableForeignKey.tableForeignKey_SQLSERVER)
+                    {
+                        <tr>
+                            <td>@hero.NomeColonna</td>
+                            <td>@hero.NomeTabellaEsterna</td>
+                            <td>@hero.NomeColonnaEsterna</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+
+        <br>
+        <br>
+
+        <!--Index Tabella Selezionata-->
+        @if (PCAdminService.TableIndex.tableIndex_SQLSERVER != null)
+        {
+            <h3>Indici Tabella Selezionata</h3>
+
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Nome Index</th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var hero in PCAdminService.TableIndex.tableIndex_SQLSERVER)
+                    {
+                        <tr>
+                            <td>@hero.NomeIndex</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+            <br />
+            <br />
+
+        }
+
+    </div>
+}
+
+<!--Tab 2-->
+@if (tab2)
+{
+
+    <div class="tabcontent">
+
+        <br>
+        <br>
+
+        <!-- Permettere di inserire una Query che viene inviata ad una Task di gestione-->
+        <h3>Inserisci una Query</h3>
+        <input style="width: 70%;" @onkeyup="@SendQuery" @bind=Query />
+
+        <br>
+        <br>
+
+        <div>
+            <!--Resetta tutte le Query al momento svolte-->
+            <button @onclick="QueryReset">Reset Query</button>
+
+            <br>
+            <br>
+
+            <!--Permettere di inserire un CSV-->
+            <h5>Importa CSV</h5>
+            <InputFile OnChange="@OnInputFileChange" />
+        </div>
+
+        <br>
+        <br>
+        @if (PCAdminService.QueryResponse != null)
+        {
+
+            <!--Messaggio Query Riuscita con successo (da controllare)-->
+            @if (PCAdminService.QueryResponse.QueryResponse == "OK")
+            {
+                <h3>Query Eseguita con Successo</h3>
+            }
+
+            @if (PCAdminService.QueryResponse.QueryResponse == "NOT_OK")
+            {
+                <h3>Errore di esecuzione della query</h3>
+            }
+        }
+
+        <!--Se la Query è una Select, ne stampa i Valori-->
+        @foreach (var query in PCAdminService.SelectQuery)
+        {
+            @if (query.Count != 0)
+            {
+                <h3>Indici Tabella Selezionata</h3>
+
+                <table class="table">
+
+                    <tbody>
+                        @foreach (var hero in query)
+                        {
+                            <tr>
+                                @foreach (var hero2 in hero)
+                                {
+                                    <td>@hero2</td>
+                                }
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+
+                <br />
+                <div>
+                    <!--Rimuove la Query Corrente-->
+                    <button @onclick="(()=>QueryRemove(query))">RemoveQuery</button>
+
+                    <br />
+                    <br />
+
+
+                    <!--Bottone per Esportare la Query Select-->
+                    <button @onclick="@ExportNameVis">Export CSV</button>
+
+                    <br />
+                    <br />
+
+
+                    <!-- Se si è selezionato di Esportare, chiede il nome del File da generare-->
+                    @if (_ExportNameVis)
+                    {
+                        <h4>Inserisci Nome del File CSV da esportare</h4>
+                        <input @bind=ExportName>
+                        <button @onclick="(()=>ExportCSV(query))">Invio</button>
+                        <br />
+                        <br />
+                        @if (PCAdminService.ExportResponse != null)
+                        {
+                            @if (PCAdminService.ExportResponse.ExportResponse == "OK")
+                            {
+                                <h3>Export Eseguito con Successo</h3>
+                            }
+
+                            @if (PCAdminService.ExportResponse.ExportResponse == "NOT_OK")
+                            {
+                                <h3>Export NON riuscito</h3>
+                            }
+                        }
+                    }
+
+                    <br />
+                    <br />
+                </div>
+            }
+
+        }
+    </div>
+
+}
+
+
+
+
+
+@code {
+
+    #region Gestione Controllo TAB
+
+    private bool tab1 = true;
+    private bool tab2 = false;
+    private bool alertMessageShow = false;
+
+    public void DisplayTab(int TabNumber)
+    {
+        switch (TabNumber)
+        {
+            case 1:
+                this.tab1 = true;
+                this.tab2 = false;
+                break;
+            case 2:
+                this.tab1 = false;
+                this.tab2 = true;
+                break;
+        }
+    }
+
+    #endregion
+
+    #region Dichiarazione Variabili
+
+    pcAdmin.Shared.DatabaseConnection databaseConnection = new pcAdmin.Shared.DatabaseConnection();
+    public string Query { get; set; } = string.Empty;
+    public string ExportName { get; set; } = string.Empty;
+    private bool _ExportNameVis = false;
+
+    #endregion
+
+    //All'inizio si cerca di stampare la lista delle Table all'internoo del DB
+    protected override async Task OnInitializedAsync()
+    {
+        databaseConnection.Provider = await sessionStorage.GetItemAsync<string>("Provider");
+        databaseConnection.ConnectionString = await sessionStorage.GetItemAsync<string>("ConnectionString");
+        await PCAdminService.GetTablesList(databaseConnection);
+        PCAdminService.OnChange += StateHasChanged;
+    }
+
+    //Task che chiama il Servizio che provvede a ricavare le Info della Table Selezionata
+    public async Task GetALLTableInfo(TablesList_SQLSERVER tablesList_SQLSERVER = default)
+    {
+        databaseConnection.Provider = await sessionStorage.GetItemAsync<string>("Provider");
+        databaseConnection.ConnectionString = await sessionStorage.GetItemAsync<string>("ConnectionString");
+        if (tablesList_SQLSERVER != null) databaseConnection.TableData = tablesList_SQLSERVER.NomeTabella;
+        await PCAdminService.GetTableInfo(databaseConnection);
+        await PCAdminService.GetTablePrimaryKey(databaseConnection);
+        await PCAdminService.GetTableIndex(databaseConnection);
+        await PCAdminService.GetTableForeignKey(databaseConnection);
+        PCAdminService.OnChange += StateHasChanged;
+    }
+
+    //Task per inviare una Query. Premendo Invio dopo aver inserito una Query viene inviata all'apposito servizio
+    //in base a se è un Select o un altra interrogazione
+    public async Task SendQuery(KeyboardEventArgs e)
+    {
+        if (e.Code == "Enter" || e.Code == "NumpadEnter")
+        {
+            databaseConnection.Provider = await sessionStorage.GetItemAsync<string>("Provider");
+            databaseConnection.ConnectionString = await sessionStorage.GetItemAsync<string>("ConnectionString");
+            databaseConnection.Query = Query;
+            if (Query.ToLower().Contains("select"))
+            {
+                await PCAdminService.SendQuerySelect(databaseConnection);
+            }
+            else
+                await PCAdminService.SendQuery(databaseConnection);
+
+            await PCAdminService.GetTablesList(databaseConnection);
+            await InvokeAsync(() => StateHasChanged());
+            await Task.Delay(3000);
+            PCAdminService.QueryResponse = null;
+            Query = string.Empty;
+            PCAdminService.OnChange += StateHasChanged;
+        }
+    }
+
+    //Task che richiama il Servizio di ExportCSV
+    public async Task ExportCSV(List<object[]> selectedtable)
+    {
+        databaseConnection.TableData = ExportName;
+        databaseConnection.SelectedTable = selectedtable;
+        await PCAdminService.ExportCSV(databaseConnection);
+        PCAdminService.OnChange += StateHasChanged;
+        await InvokeAsync(() => StateHasChanged());
+        await Task.Delay(3000);
+        _ExportNameVis = false;
+        PCAdminService.QueryResponse = null;
+        Query = string.Empty;
+        PCAdminService.OnChange += StateHasChanged;
+
+    }
+
+    //Resetta Tutte le Query Select
+    public void QueryReset()
+    {
+        PCAdminService.SelectQuery = new List<List<object[]>>();
+    }
+
+    //Rimuove la Query Select Selezionata
+    public void QueryRemove(List<object[]> query)
+    {
+        PCAdminService.SelectQuery.Remove(query);
+    }
+
+
+    //Cambia la Visibilità dell'input di Inserimento Nome Export CSV
+    public void ExportNameVis()
+    {
+        _ExportNameVis = !_ExportNameVis;
+    }
+
+    #region Gestione Import CSV
+
+    public async Task OnInputFileChange(InputFileChangeEventArgs e)
+    {
+
+        var singleFile = e.File;
+
+        Regex regex = new Regex(".+\\.csv", RegexOptions.Compiled);
+        if (!regex.IsMatch(singleFile.Name))
+        {
+        }
+        else
+        {
+            var stream = singleFile.OpenReadStream();
+            var csv = new List<object[]>();
+            MemoryStream ms = new MemoryStream();
+            await stream.CopyToAsync(ms);
+            stream.Close();
+            var outputFileString = System.Text.Encoding.UTF8.GetString(ms.ToArray());
+
+            foreach (var item in outputFileString.Split(Environment.NewLine))
+            {
+                csv.Add(SplitCSV(item.ToString()));
+            }
+            PCAdminService.SelectQuery.Add(csv);
+            alertMessageShow = true;
+            await InvokeAsync(() => StateHasChanged());
+            await Task.Delay(4000);
+            alertMessageShow = false;
+            PCAdminService.QueryResponse = null;
+            Query = string.Empty;
+        }
+    }
+
+    private string[] SplitCSV(string input)
+    {
+        Regex csvSplit = new Regex("(?:^|,)(\"(?:[^\"]+|\"\")*\"|[^,]*)", RegexOptions.Compiled);
+        List<string> list = new List<string>();
+        string curr = null;
+        foreach (Match match in csvSplit.Matches(input))
+        {
+            curr = match.Value;
+            if (0 == curr.Length) list.Add("");
+
+            list.Add(curr.TrimStart(','));
+        }
+        return list.ToArray();
+    }
+
+    #endregion
+
+    public void Dispose()
+    {
+        PCAdminService.OnChange -= StateHasChanged;
+    }
+
+}
+

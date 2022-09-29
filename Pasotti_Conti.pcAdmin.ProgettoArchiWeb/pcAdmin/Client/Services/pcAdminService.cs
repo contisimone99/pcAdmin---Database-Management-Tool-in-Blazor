@@ -6,7 +6,6 @@ using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
-using TableIndex = pcAdmin.Shared.TableIndex;
 
 namespace pcAdmin.Client.Services
 {
@@ -19,60 +18,70 @@ namespace pcAdmin.Client.Services
             _httpClient = httpClient;
         }
 
-        public List<TablesList> TablesList { get; set; } = new List<TablesList>();
-        public List<TableInfo> TableInfo { get; set; } = new List<TableInfo>();
-        public List<TablePrimaryKey> TablePrimaryKey { get; set; } = new List<TablePrimaryKey>();
-        public List<TableForeignKey> TableForeignKey { get; set; } = new List<TableForeignKey>();
-        public List<TableIndex> TableIndex { get; set; } = new List<TableIndex>();
-        public List<object[]> SelectQuery { get; set; } = new List<object[]>();
-
-
-
-
+        public TablesList TablesList { get; set; } = new TablesList();
+        public List<object[]> TableInfo { get; set; } = new List<object[]>();
+        public TablePrimaryKey TablePrimaryKey { get; set; } = new TablePrimaryKey();
+        public TableForeignKey TableForeignKey { get; set; } = new TableForeignKey();
+        public TableIndexDB TableIndex { get; set; } = new TableIndexDB();
+        public List<List<object[]>> SelectQuery { get; set; } = new List<List<object[]>>();
+        public Response QueryResponse { get; set; }
+        public Response ExportResponse { get; set; }
 
         public event Action OnChange;
 
 
 
         
-        public async Task<List<TablesList>> GetTablesList(DatabaseConnection databaseConnection)
+        public async Task<TablesList> GetTablesList(DatabaseConnection databaseConnection)
         {
             var result = await _httpClient.PostAsJsonAsync($"api/pcadmin/gettableslist", databaseConnection);
-            TablesList = await result.Content.ReadFromJsonAsync<List<TablesList>>();
+            TablesList = await result.Content.ReadFromJsonAsync<TablesList>();
             return TablesList;
         }
-        public async Task<List<TableInfo>> GetTableInfo(DatabaseConnection databaseConnection)
+
+        public async Task<List<object[]>> GetTableInfo(DatabaseConnection databaseConnection)
         {
             var result = await _httpClient.PostAsJsonAsync($"api/pcadmin/gettableinfo", databaseConnection);
-            TableInfo = await result.Content.ReadFromJsonAsync<List<TableInfo>>();
+            TableInfo = await result.Content.ReadFromJsonAsync<List<object[]>>();
             return TableInfo;
         }
-        public async Task<List<TablePrimaryKey>> GetTablePrimaryKey(DatabaseConnection databaseConnection)
+        public async Task<TablePrimaryKey> GetTablePrimaryKey(DatabaseConnection databaseConnection)
         {
             var result = await _httpClient.PostAsJsonAsync($"api/pcadmin/gettableprimarykey", databaseConnection);
-            TablePrimaryKey = await result.Content.ReadFromJsonAsync<List<TablePrimaryKey>>();
+            TablePrimaryKey = await result.Content.ReadFromJsonAsync<TablePrimaryKey>();
             return TablePrimaryKey;
         }
-        public async Task<List<TableForeignKey>> GetTableForeignKey(DatabaseConnection databaseConnection)
+        public async Task<TableForeignKey> GetTableForeignKey(DatabaseConnection databaseConnection)
         {
             var result = await _httpClient.PostAsJsonAsync($"api/pcadmin/gettableforeignkey", databaseConnection);
-            TableForeignKey = await result.Content.ReadFromJsonAsync<List<TableForeignKey>>();
+            TableForeignKey = await result.Content.ReadFromJsonAsync<TableForeignKey>();
             return TableForeignKey;
         }
-
-        public async Task<List<TableIndex>> GetTableIndex(DatabaseConnection databaseConnection)
+        public async Task<TableIndexDB> GetTableIndex(DatabaseConnection databaseConnection)
         {
             var result = await _httpClient.PostAsJsonAsync($"api/pcadmin/gettableindex", databaseConnection);
-            TableIndex = await result.Content.ReadFromJsonAsync<List<TableIndex>>();
+            TableIndex = await result.Content.ReadFromJsonAsync<TableIndexDB>();
             return TableIndex;
         }
 
-        public async Task<List<object[]>> SendQuery(DatabaseConnection databaseConnection)
+        public async Task<List<List<object[]>>> SendQuerySelect(DatabaseConnection databaseConnection)
+        {
+            var result = await _httpClient.PostAsJsonAsync($"api/pcadmin/sendqueryselect", databaseConnection);
+            SelectQuery.Add(await result.Content.ReadFromJsonAsync<List<object[]>>());
+            return SelectQuery;
+        }
+        public async Task<Response> SendQuery(DatabaseConnection databaseConnection)
         {
             var result = await _httpClient.PostAsJsonAsync($"api/pcadmin/sendquery", databaseConnection);
-            SelectQuery = await result.Content.ReadFromJsonAsync<List<object[]>>();
-            return SelectQuery;
+            QueryResponse = await result.Content.ReadFromJsonAsync<Response>();
+            return QueryResponse;
+        }
 
+        public async Task<Response> ExportCSV(DatabaseConnection databaseConnection)
+        {
+            var result = await _httpClient.PostAsJsonAsync($"api/pcadmin/exportcsv", databaseConnection);
+            ExportResponse = await result.Content.ReadFromJsonAsync<Response>();
+            return ExportResponse;
         }
     }
 }

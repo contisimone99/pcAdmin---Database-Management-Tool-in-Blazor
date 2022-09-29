@@ -4,17 +4,18 @@
 @using pcAdmin.Shared
 @inject IJSRuntime JSRuntime
 @inject NavigationManager NavigationManager
-
 @inject ISessionStorageService sessionStorage
 
 
 
-
+<!--Controllo per Tab-->
 <div class="tab">
     <button @onclick="(x=>DisplayTab(1))">SQLSERVER</button>
     <button @onclick="(x=>DisplayTab(2))">SQLITE</button>
     <button @onclick="(x=>DisplayTab(3))">POSTGRESQL</button>
 </div>
+
+<!--Tab 1 SQLSERVER-->
 @if(tab1){
 <div class="tabcontent">
         <h1>Inserisci Dati Database SQLSERVER</h1>
@@ -54,6 +55,8 @@
         </div>
 </div>
 }
+
+<!--Tab 2 SQLITE-->
 @if (tab2)
 {
     <div class="tabcontent">
@@ -72,6 +75,8 @@
         </div>
     </div>
 }
+
+<!--Tab 3 POSTGRESQL-->
 @if (tab3)
 {
     <div class="tabcontent">
@@ -124,6 +129,9 @@
     
 
 @code {
+
+    #region Gestione Controllo TAB
+
     private bool tab1 = true;
     private bool tab2 = false;
     private bool tab3 = false;
@@ -151,6 +159,9 @@
         }
     }
 
+    #endregion
+
+    #region Variabili dei vari DBMS
     string SQLSERVER_Server { get; set; }
     string SQLSERVER_Database { get; set; }
     string SQLSERVER_UserID { get; set; }
@@ -164,6 +175,9 @@
     string POSTGRESQL_UserID { get; set; }
     string POSTGRESQL_Password { get; set; }
 
+    #endregion
+
+    //Salvataggio Credenziali DBMS, creazione ConnectionString e reindirizzamento in New Tab
     async Task Save(int TabNumber)
     {
         switch (TabNumber)
@@ -176,7 +190,7 @@
                 SQLSERVER_Database = "";
                 SQLSERVER_UserID = "";
                 SQLSERVER_Password = "";
-                NavigationManager.NavigateTo("pcadmin");
+                NavigationManager.NavigateTo("pcadminsqlserver");
                 break;
 
             case 2:
@@ -184,7 +198,7 @@
                 await sessionStorage.SetItemAsync("ConnectionString", SQLITE_ConnString);
                 await sessionStorage.SetItemAsync("Provider", "SQLITE");
                 SQLITE_DataSource = "";
-                NavigationManager.NavigateTo("pcadmin");
+                NavigationManager.NavigateTo("pcadminsqlite");
                 break;
 
             case 3:
@@ -196,7 +210,7 @@
                 POSTGRESQL_Port = "";
                 POSTGRESQL_UserID = "";
                 POSTGRESQL_Password = "";
-                NavigationManager.NavigateTo("pcadmin");
+                NavigationManager.NavigateTo("pcadminpostgresql");
                 break;
 
         }
@@ -204,6 +218,8 @@
     }
 }
 
+
+<!--Stili TAB-->
 <style>
     .tab {
         overflow: hidden;
