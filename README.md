@@ -215,8 +215,8 @@ pcAdmin/
 
 ## Authors
 
-- Matteo Pasotti (20035991)
-- Simone Conti (20034446)
+- Matteo Pasotti
+- Simone Conti
 
 ## Acknowledgments
 
